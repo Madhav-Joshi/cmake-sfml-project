@@ -24,6 +24,11 @@ std::vector<Star> createStars(uint32_t count)
         stars.push_back({{x, y}, z});
     }
 
+    // Depth ordering
+    std::sort(stars.begin(), stars.end(), [](Star const& s_1, Star const& s_2){
+        return s_1.z > s_2.z;
+    });
+
     return stars;
 }
 
@@ -56,6 +61,13 @@ int main()
                 float const scale = 1.0f / s.z;
                 shape.setPosition(s.position * scale + conf::window_size_f * 0.5f);
                 shape.setScale(scale, scale);
+
+                // Darken the far away stars
+                float const depth_ratio = (s.z - conf::near) / (conf::far - conf::near);
+                float const color_ratio = 1.0f - depth_ratio;
+                auto const c = static_cast<uint8_t>(color_ratio * 255.0f);
+                shape.setFillColor({c,c,c});
+
                 window.draw(shape);
             }
         }
