@@ -47,6 +47,11 @@ int main()
         for (auto& s : stars)
         {
             s.z -= conf::speed * conf::dt;
+            if (s.z < conf::near)
+            {
+                // Offset the star by the excess travel it made behind near to keep spacing constant
+                s.z = conf::far - (conf::near - s.z);
+            }
         }
 
         window.clear();
