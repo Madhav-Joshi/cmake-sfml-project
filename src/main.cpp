@@ -51,10 +51,13 @@ int main()
 
         for(auto const& s : stars)
         {
-            float const scale = 1.0f / s.z;
-            shape.setPosition(s.position * scale + conf::window_size_f * 0.5f);
-            shape.setScale(scale, scale);
-            window.draw(shape);
+            if (s.z > conf::near)
+            {
+                float const scale = 1.0f / s.z;
+                shape.setPosition(s.position * scale + conf::window_size_f * 0.5f);
+                shape.setScale(scale, scale);
+                window.draw(shape);
+            }
         }
 
         window.display();
