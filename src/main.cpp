@@ -72,10 +72,26 @@ int main()
 {
     auto window = sf::RenderWindow{{conf::window_size.x, conf::window_size.y}, "CMake SFML Project",sf::Style::Fullscreen};
     window.setFramerateLimit(conf::max_framerate);
+    window.setMouseCursorVisible(false);
+
+    sf::Texture texture;
+    texture.loadFromFile("res/star.png");
+    texture.setSmooth(true);
+    texture.generateMipmap();
 
     std::vector<Star> stars = createStars(conf::count, conf::far);
 
     sf::VertexArray va(sf::PrimitiveType::Quads, 4*conf::count);
+    // Prefill texture coordinates as they are constant
+    auto const texture_size_f = static_cast<sf::Vector2f>(texture.getSize());
+    for (uint32_t idx{conf::count}; idx--;)
+    {
+        uint32_t const i = idx * 4;
+        va[i+0].texCoords = {0.0f, 0.0f};
+        va[i+1].texCoords = {texture_size_f.x, 0.0f};
+        va[i+2].texCoords = {texture_size_f.x, texture_size_f.y};
+        va[i+3].texCoords = {0.0f, texture_size_f.y};
+    }
 
     uint32_t first = 0;
     while (window.isOpen())
@@ -108,9 +124,10 @@ int main()
             updateGeometry(i, s, va);
         }
 
-        sf::Transform tf;
-        tf.translate(conf::window_size_f * 0.5f);
-        window.draw(va, tf);
+        sf::RenderStates states;
+        states.texture = &texture;
+        states.transform.translate(conf::window_size_f * 0.5f);
+        window.draw(va, states);
 
         window.display();
     }
