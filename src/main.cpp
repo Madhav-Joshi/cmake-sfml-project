@@ -44,12 +44,38 @@ std::vector<Star> createStars(uint32_t count, float scale)
     return stars;
 }
 
+void updateGeometry(uint32_t idx, Star const& s, sf::VertexArray& va)
+{
+    float const scale = 1.0f / s.z;
+    float const depth_ratio = (s.z - conf::near) / (conf::far - conf::near);
+    float const color_ratio = 1.0f - depth_ratio;
+    auto const c = static_cast<uint8_t>(color_ratio * 255.0f);
+
+    sf::Vector2f const p = s.position * scale;
+    float const r = conf::radius * scale;
+    uint32_t const i = idx * 4;
+
+    va[i+0].position = {p.x - r, p.y - r};
+    va[i+1].position = {p.x + r, p.y - r};
+    va[i+2].position = {p.x + r, p.y + r};
+    va[i+3].position = {p.x - r, p.y + r};
+
+    sf::Color const color{c,c,c};
+    va[i+0].color = color;
+    va[i+1].color = color;
+    va[i+2].color = color;
+    va[i+3].color = color;
+
+}
+
 int main()
 {
     auto window = sf::RenderWindow{{conf::window_size.x, conf::window_size.y}, "CMake SFML Project",sf::Style::Fullscreen};
     window.setFramerateLimit(conf::max_framerate);
 
     std::vector<Star> stars = createStars(conf::count, conf::far);
+
+    sf::VertexArray va(sf::PrimitiveType::Quads, 4*conf::count);
 
     uint32_t first = 0;
     while (window.isOpen())
@@ -79,18 +105,12 @@ int main()
         {
             uint32_t const idx = (first + i) % conf::count;
             Star const& s = stars[idx];
-            float const scale = 1.0f / s.z;
-            shape.setPosition(s.position * scale + conf::window_size_f * 0.5f);
-            shape.setScale(scale, scale);
-
-            // Darken the far away stars
-            float const depth_ratio = (s.z - conf::near) / (conf::far - conf::near);
-            float const color_ratio = 1.0f - depth_ratio;
-            auto const c = static_cast<uint8_t>(color_ratio * 255.0f);
-            shape.setFillColor({c,c,c});
-
-            window.draw(shape);
+            updateGeometry(i, s, va);
         }
+
+        sf::Transform tf;
+        tf.translate(conf::window_size_f * 0.5f);
+        window.draw(va, tf);
 
         window.display();
     }
